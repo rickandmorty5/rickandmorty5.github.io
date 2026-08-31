@@ -1,11 +1,453 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta http-equiv="refresh" content="0; url=https://www.youtube.com/@ColinJames13">
-  <title>Redirecting to YouTube...</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Citadel Archives | Rick and Morty</title>
+    <style>
+        :root {
+            --portal-green: #00ff97;
+            --portal-yellow: #a6ee00;
+            --space-dark: #0f111a;
+            --card-bg: #1a1d29;
+            --text-light: #f0f6fc;
+            --glow-green: rgba(0, 255, 151, 0.5);
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--space-dark);
+            color: var(--text-light);
+        }
+
+        header {
+            text-align: center;
+            padding: 2rem 1rem;
+            background: radial-gradient(circle, rgba(0,255,151,0.1) 0%, rgba(15,17,26,1) 75%);
+            border-bottom: 2px solid var(--portal-green);
+        }
+
+        h1 {
+            color: var(--portal-green);
+            font-size: 2.8rem;
+            margin: 0 0 10px 0;
+            text-shadow: 0 0 12px var(--glow-green);
+        }
+
+        .controls-container {
+            margin-top: 15px;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        input[type="text"], select {
+            padding: 12px 18px;
+            border-radius: 25px;
+            border: 2px solid var(--portal-green);
+            background: var(--card-bg);
+            color: #fff;
+            outline: none;
+            transition: box-shadow 0.2s;
+            font-size: 0.95rem;
+        }
+
+        input[type="text"] {
+            width: 280px;
+        }
+
+        input[type="text"]:focus, select:focus {
+            box-shadow: 0 0 10px var(--glow-green);
+        }
+
+        #character-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 25px;
+            padding: 3rem 2rem;
+            max-width: 1300px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid #2d3142;
+            transition: transform 0.25s ease, box-shadow 0.25s ease;
+            cursor: pointer;
+        }
+
+        .card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 8px 24px rgba(0, 255, 151, 0.45);
+        }
+
+        .card-img-wrapper {
+            width: 100%;
+            height: 280px;
+            overflow: hidden;
+            background-color: #11131c;
+            border-bottom: 2px solid var(--portal-green);
+        }
+
+        .card img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s ease;
+            image-rendering: -webkit-optimize-contrast;
+        }
+
+        .card:hover img {
+            transform: scale(1.05);
+        }
+
+        .card-details {
+            padding: 20px;
+            text-align: center;
+        }
+
+        .card-details h3 {
+            margin: 0 0 10px 0;
+            font-size: 1.3rem;
+            color: #fff;
+        }
+
+        .card-details p {
+            margin: 0;
+            font-size: 0.95rem;
+            color: #b0b0b0;
+        }
+
+        .status-dot {
+            height: 9px;
+            width: 9px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 7px;
+        }
+
+        .status-alive { background-color: #55cc44; box-shadow: 0 0 5px #55cc44; }
+        .status-dead { background-color: #d63d2e; box-shadow: 0 0 5px #d63d2e; }
+        .status-unknown { background-color: #9e9e9e; box-shadow: 0 0 5px #9e9e9e; }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+            padding: 1.5rem 0 4rem 0;
+        }
+
+        .btn {
+            background-color: var(--card-bg);
+            color: var(--portal-green);
+            border: 2px solid var(--portal-green);
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background 0.2s, color 0.2s;
+        }
+
+        .btn:hover:not(:disabled) {
+            background-color: var(--portal-green);
+            color: var(--space-dark);
+        }
+
+        .btn:disabled {
+            border-color: #444;
+            color: #666;
+            cursor: not-allowed;
+        }
+
+        #page-number {
+            font-size: 1.1rem;
+            font-weight: bold;
+        }
+
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(8px);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: var(--card-bg);
+            border: 2px solid var(--portal-green);
+            border-radius: 15px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 85vh;
+            overflow-y: auto;
+            padding: 25px;
+            position: relative;
+            box-shadow: 0 0 30px rgba(0, 255, 151, 0.5);
+            text-align: center;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            font-size: 1.8rem;
+            color: #fff;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .close-btn:hover {
+            color: var(--portal-green);
+        }
+
+        .modal-body img {
+            width: 180px;
+            height: 180px;
+            border-radius: 50%;
+            border: 3px solid var(--portal-green);
+            margin-bottom: 15px;
+            box-shadow: 0 0 20px var(--glow-green);
+            object-fit: cover;
+        }
+
+        .modal-body h2 {
+            margin: 0 0 15px 0;
+            font-size: 2rem;
+            color: var(--portal-green);
+            text-shadow: 0 0 10px var(--glow-green);
+        }
+
+        .modal-info {
+            text-align: left;
+            margin-top: 20px;
+            background: #11131c;
+            padding: 20px;
+            border-radius: 10px;
+            line-height: 1.7;
+        }
+
+        .modal-info p {
+            margin: 10px 0;
+        }
+
+        .episode-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+            max-height: 120px;
+            overflow-y: auto;
+            padding: 8px;
+            background: #090a0f;
+            border-radius: 8px;
+        }
+
+        .badge {
+            background: var(--card-bg);
+            border: 1px solid var(--portal-green);
+            color: var(--portal-green);
+            font-size: 0.8rem;
+            padding: 3px 8px;
+            border-radius: 5px;
+        }
+    </style>
 </head>
 <body>
-  <p>If you are not redirected automatically, <a href="https://www.youtube.com/@ColinJames13">click here to go to YouTube</a>.</p>
+
+    <header>
+        <h1>Citadel Character Index</h1>
+        <div class="controls-container">
+            <input type="text" id="search-input" placeholder="Search character..." oninput="handleSearch()">
+            <select id="items-per-page" onchange="handleLimitChange()">
+                <option value="20">Show 20 per page</option>
+                <option value="40">Show 40 per page</option>
+                <option value="60">Show 60 per page</option>
+            </select>
+        </div>
+    </header>
+
+    <main id="character-grid"></main>
+
+    <div class="pagination">
+        <button id="prev-btn" class="btn" onclick="changePage(-1)">Previous</button>
+        <span id="page-number">Page 1</span>
+        <button id="next-btn" class="btn" onclick="changePage(1)">Next</button>
+    </div>
+
+    <div id="modal-overlay" class="modal-overlay" onclick="closeModal(event)">
+        <div class="modal-content">
+            <span class="close-btn" onclick="hideModal()">&times;</span>
+            <div id="modal-body" class="modal-body"></div>
+        </div>
+    </div>
+
+    <script>
+        const grid = document.getElementById('character-grid');
+        const modalOverlay = document.getElementById('modal-overlay');
+        const modalBody = document.getElementById('modal-body');
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const pageNumber = document.getElementById('page-number');
+
+        let currentPage = 1;
+        let totalPages = 1;
+        let itemsPerPage = 20;
+
+        async function fetchCharacters(page = 1, searchQuery = '') {
+            try {
+                let query = searchQuery.trim();
+                let isPrimeSearch = false;
+
+                if (query.toLowerCase() === 'rick prime' || query.toLowerCase() === 'prime rick') {
+                    query = 'Rick';
+                    isPrimeSearch = true;
+                }
+
+                const apiPagesNeeded = itemsPerPage / 20;
+                const startingApiPage = ((page - 1) * apiPagesNeeded) + 1;
+                
+                let fetchedResults = [];
+                let maxApiPages = 1;
+
+                for (let i = 0; i < apiPagesNeeded; i++) {
+                    const targetPage = startingApiPage + i;
+                    const response = await fetch(`https://rickandmortyapi.com/api/character/?page=${targetPage}&name=${encodeURIComponent(query)}`);
+                    const data = await response.json();
+                    
+                    if (data.error) break;
+                    
+                    maxApiPages = data.info.pages;
+                    fetchedResults = fetchedResults.concat(data.results);
+                }
+
+                if (isPrimeSearch) {
+                    fetchedResults = fetchedResults.filter(char => 
+                        char.name.toLowerCase().includes('prime') || 
+                        (char.origin && char.origin.name.toLowerCase().includes('prime'))
+                    );
+                }
+                
+                if (fetchedResults.length === 0) {
+                    grid.innerHTML = '<p style="grid-column: 1/-1; text-align: center;">No characters found in this dimension.</p>';
+                    prevBtn.disabled = true;
+                    nextBtn.disabled = true;
+                    pageNumber.textContent = `Page 0`;
+                    return;
+                }
+
+                totalPages = Math.ceil(maxApiPages / apiPagesNeeded);
+                renderCharacters(fetchedResults);
+                updatePagination();
+            } catch (error) {
+                grid.innerHTML = '<p style="grid-column: 1/-1; text-align: center;">Failed to load characters from the Multiverse API.</p>';
+            }
+        }
+
+        function renderCharacters(characters) {
+            grid.innerHTML = '';
+            characters.forEach(char => {
+                const statusClass = `status-${char.status.toLowerCase()}`;
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.onclick = () => showModal(char);
+                card.innerHTML = `
+                    <div class="card-img-wrapper">
+                        <img src="${char.image}" alt="${char.name}" loading="lazy">
+                    </div>
+                    <div class="card-details">
+                        <h3>${char.name}</h3>
+                        <p><span class="status-dot ${statusClass}"></span>${char.status} -${char.species}</p>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function updatePagination() {
+            pageNumber.textContent = `Page ${currentPage} of${totalPages}`;
+            prevBtn.disabled = currentPage === 1;
+            nextBtn.disabled = currentPage >= totalPages;
+        }
+
+        function changePage(direction) {
+            currentPage += direction;
+            const searchQuery = document.getElementById('search-input').value;
+            fetchCharacters(currentPage, searchQuery);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function handleSearch() {
+            currentPage = 1;
+            const searchQuery = document.getElementById('search-input').value;
+            fetchCharacters(currentPage, searchQuery);
+        }
+
+        function handleLimitChange() {
+            itemsPerPage = parseInt(document.getElementById('items-per-page').value, 10);
+            currentPage = 1;
+            const searchQuery = document.getElementById('search-input').value;
+            fetchCharacters(currentPage, searchQuery);
+        }
+
+        async function showModal(char) {
+            const statusClass = `status-${char.status.toLowerCase()}`;
+            modalBody.innerHTML = `<h2>Loading episode data...</h2>`;
+            modalOverlay.style.display = 'flex';
+
+            const episodeIds = char.episode.map(url => url.split('/').pop());
+            
+            let episodeList = [];
+            try {
+                const res = await fetch(`https://rickandmortyapi.com/api/episode/${episodeIds.join(',')}`);
+                const epData = await res.json();
+                episodeList = Array.isArray(epData) ? epData : [epData];
+            } catch (err) {
+                console.error('Failed to load episodes', err);
+            }
+
+            const episodeBadges = episodeList.map(ep => 
+                `<span class="badge" title="${ep.name}">${ep.episode}</span>`
+            ).join('');
+
+            modalBody.innerHTML = `
+                <img src="${char.image}" alt="${char.name}">
+                <h2>${char.name}</h2>
+                <div class="modal-info">
+                    <p><strong>Status:</strong> <span class="status-dot ${statusClass}"></span>${char.status}</p>
+                    <p><strong>Species:</strong> ${char.species}</p>
+                    <p><strong>Gender:</strong> ${char.gender}</p>
+                    <p><strong>Origin:</strong> ${char.origin.name}</p>
+                    <p><strong>Last Known Location:</strong> ${char.location.name}</p>
+                    <p><strong>Featured Episodes (${char.episode.length}):</strong></p>
+                    <div class="episode-tags">
+                        ${episodeBadges || '<span>No episode details found.</span>'}
+                    </div>
+                </div>
+            `;
+        }
+
+        function hideModal() {
+            modalOverlay.style.display = 'none';
+        }
+
+        function closeModal(event) {
+            if (event.target === modalOverlay) {
+                hideModal();
+            }
+        }
+
+        fetchCharacters();
+    </script>
 </body>
 </html>
