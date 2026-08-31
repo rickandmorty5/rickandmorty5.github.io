@@ -50,7 +50,10 @@ async function fetchAllCharacters() {
     }
     const results = await Promise.all(batch);
     results.forEach(data => all.push(...data.results));
-    $("count").textContent = `Loading ${all.length.toLocaleString()} characters…`;
+    
+    // Safely update loading count if element exists
+    const countEl = $("count");
+    if (countEl) countEl.textContent = `Loading ${all.length.toLocaleString()} characters…`;
   }
 
   return all;
@@ -228,7 +231,10 @@ document.addEventListener("keydown", e => {
     state.all = await fetchAllCharacters();
     state.loading = false;
     state.filtered = [...state.all];
-    $("count").textContent = `${state.all.length.toLocaleString()} characters loaded`;
+    
+    const countEl = $("count");
+    if (countEl) countEl.textContent = `${state.all.length.toLocaleString()} characters loaded`;
+    
     $("resultCount").textContent = state.all.length.toLocaleString();
     render();
   } catch (err) {
@@ -236,7 +242,10 @@ document.addEventListener("keydown", e => {
     grid.innerHTML = "";
     errorBox.textContent = err.message || "Something went wrong.";
     errorBox.hidden = false;
-    $("count").textContent = "API unavailable";
+    
+    const countEl = $("count");
+    if (countEl) countEl.textContent = "API unavailable";
+    
     $("resultCount").textContent = "0";
   }
 })();
